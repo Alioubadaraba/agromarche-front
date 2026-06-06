@@ -13,15 +13,9 @@ export default function Login() {
   const submit = async () => {
     setErreur("");
     if (mode === "register") {
-      if (!form.nom || !form.email || !form.mot_de_passe) {
-        setErreur("Veuillez remplir tous les champs."); return;
-      }
-      if (form.mot_de_passe !== form.confirmer_mdp) {
-        setErreur("Les mots de passe ne correspondent pas."); return;
-      }
-      if (form.mot_de_passe.length < 6) {
-        setErreur("Le mot de passe doit contenir au moins 6 caractères."); return;
-      }
+      if (!form.nom || !form.email || !form.mot_de_passe) { setErreur("Veuillez remplir tous les champs."); return; }
+      if (form.mot_de_passe !== form.confirmer_mdp) { setErreur("Les mots de passe ne correspondent pas."); return; }
+      if (form.mot_de_passe.length < 6) { setErreur("Mot de passe trop court (6 caractères minimum)."); return; }
     }
     try {
       const url = mode === "login" ? "/auth/login" : "/auth/register";
@@ -30,7 +24,7 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(data.utilisateur));
       navigate("/dashboard");
     } catch {
-      setErreur(mode === "login" ? "Email ou mot de passe incorrect." : "Erreur lors de l'inscription. Email déjà utilisé ?");
+      setErreur(mode === "login" ? "Email ou mot de passe incorrect." : "Erreur. Email déjà utilisé ?");
     }
   };
 
@@ -61,15 +55,15 @@ export default function Login() {
 
         {mode === "register" && (
           <>
-            <input name="confirmer_mdp" type="password" placeholder="Confirmer le mot de passe *" onChange={handle}
-              className={`w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${form.confirmer_mdp && form.mot_de_passe !== form.confirmer_mdp ? "border-red-400 bg-red-50" : form.confirmer_mdp && form.mot_de_passe === form.confirmer_mdp ? "border-green-400 bg-green-50" : ""}`} />
-
-            {form.confirmer_mdp && form.mot_de_passe !== form.confirmer_mdp && (
-              <p className="text-red-500 text-xs mb-2">❌ Les mots de passe ne correspondent pas</p>
-            )}
-            {form.confirmer_mdp && form.mot_de_passe === form.confirmer_mdp && (
-              <p className="text-green-600 text-xs mb-2">✅ Mots de passe identiques</p>
-            )}
+            <div className="mb-3">
+              <input name="confirmer_mdp" type="password" placeholder="Confirmer le mot de passe *" onChange={handle}
+                className={`w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  form.confirmer_mdp && form.mot_de_passe !== form.confirmer_mdp ? "border-red-400 bg-red-50" :
+                  form.confirmer_mdp && form.mot_de_passe === form.confirmer_mdp ? "border-green-400 bg-green-50" : ""
+                }`} />
+              {form.confirmer_mdp && form.mot_de_passe !== form.confirmer_mdp && <p className="text-red-500 text-xs mt-1">❌ Les mots de passe ne correspondent pas</p>}
+              {form.confirmer_mdp && form.mot_de_passe === form.confirmer_mdp && <p className="text-green-600 text-xs mt-1">✅ Mots de passe identiques</p>}
+            </div>
 
             <select name="role" onChange={handle} className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
               <option value="agriculteur">🌱 Agriculteur</option>

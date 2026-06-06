@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import ConseilsIA from './ConseilsIA';
-import ConseilsIA from './ConseilsIA';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import ConseilsIA from "./ConseilsIA";
 
 const REGIONS = ["dakar","thies","kaolack","ziguinchor","saint-louis"];
 const PRODUITS = ["Tomates","Oignons","Mil","Maïs","Arachides","Riz local","Mangues","Niébé","Manioc","Aubergines","Choux","Pastèques"];
@@ -14,7 +13,6 @@ export default function Dashboard() {
   const [prix, setPrix]           = useState([]);
   const [meteo, setMeteo]         = useState(null);
   const [acheteurs, setAcheteurs] = useState([]);
-  const [conseils, setConseils]   = useState([]);
   const [offres, setOffres]       = useState([]);
   const [mlProduit, setMlProduit] = useState("Tomates");
   const [mlData, setMlData]       = useState(null);
@@ -23,12 +21,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  useEffect(() => { chargerMeteo(); chargerConseils(); chargerPrix(); chargerAcheteurs(); chargerOffres(); }, [region]);
+  useEffect(() => { chargerMeteo(); chargerPrix(); chargerAcheteurs(); chargerOffres(); }, [region]);
 
   const chargerPrix      = async () => { try { const {data} = await api.get(`/prix/${region}`); setPrix(data); } catch { setPrix([]); }};
   const chargerMeteo     = async () => { try { const {data} = await api.get(`/meteo/${region}`); setMeteo(data); } catch { setMeteo(null); }};
   const chargerAcheteurs = async () => { try { const {data} = await api.get(`/acheteurs/?region=${region}`); setAcheteurs(data); } catch { setAcheteurs([]); }};
-  const chargerConseils  = async () => { try { const {data} = await api.get(`/conseils/`); setConseils(data.conseils||[]); } catch { setConseils([]); }};
   const chargerOffres    = async () => { try { const {data} = await api.get(`/offres/?region=${region}`); setOffres(data); } catch { setOffres([]); }};
 
   const lancerPrediction = async () => {
@@ -42,8 +39,6 @@ export default function Dashboard() {
   };
 
   const deconnexion = () => { localStorage.clear(); navigate("/"); };
-
-  const BADGE = { Saison:"bg-yellow-100 text-yellow-800", Sol:"bg-green-100 text-green-800", Santé:"bg-red-100 text-red-800", Eau:"bg-blue-100 text-blue-800", Récolte:"bg-orange-100 text-orange-800", Maraîchage:"bg-teal-100 text-teal-800" };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -70,7 +65,7 @@ export default function Dashboard() {
       )}
 
       <nav className="bg-white border-b flex overflow-x-auto">
-        {[["prix","💰 Prix"],["offres","📢 Offres"],["acheteurs","🤝 Acheteurs"],["meteo","🌦 Météo"],["ml","🤖 IA Prix"],["conseils","💡 Conseils"]].map(([id,label])=>(
+        {[["prix","💰 Prix"],["offres","📢 Offres"],["acheteurs","🤝 Acheteurs"],["meteo","🌦 Météo"],["ml","🤖 IA Prix"],["conseils","💡 Conseils IA"]].map(([id,label])=>(
           <button key={id} onClick={()=>setOnglet(id)}
             className={`flex-shrink-0 px-3 py-3 text-sm font-medium border-b-2 transition ${onglet===id?"border-green-600 text-green-600":"border-transparent text-gray-500 hover:text-gray-700"}`}>
             {label}
@@ -84,7 +79,7 @@ export default function Dashboard() {
           <div>
             <h2 className="font-semibold text-gray-700 mb-3">Prix du marché — {region.charAt(0).toUpperCase()+region.slice(1)}</h2>
             {prix.length===0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border"><p className="text-4xl mb-3">📊</p><p className="text-gray-500 font-medium">Aucun prix disponible</p></div>
+              <div className="text-center py-12 bg-white rounded-xl border"><p className="text-4xl mb-3">📊</p><p className="text-gray-500">Aucun prix disponible</p></div>
             ) : (
               <div className="space-y-3">
                 {prix.map((p,i)=>(
@@ -109,17 +104,15 @@ export default function Dashboard() {
             <h2 className="font-semibold text-gray-700 mb-1">Offres d'achat disponibles</h2>
             <p className="text-xs text-gray-400 mb-4">Des acheteurs cherchent vos produits — contactez-les directement</p>
             {offres.length===0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border"><p className="text-4xl mb-3">📢</p><p className="text-gray-500 font-medium">Aucune offre disponible</p><p className="text-gray-400 text-sm mt-1">Les acheteurs n'ont pas encore publié d'offres pour cette région</p></div>
+              <div className="text-center py-12 bg-white rounded-xl border"><p className="text-4xl mb-3">📢</p><p className="text-gray-500">Aucune offre pour cette région</p></div>
             ) : (
               <div className="space-y-3">
                 {offres.map((o,i)=>(
                   <div key={i} className="bg-white rounded-xl shadow-sm border p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">{o.acheteur_nom.charAt(0)}</div>
-                        <div><p className="font-semibold text-gray-800">{o.acheteur_nom}</p><p className="text-xs text-gray-400">Acheteur — {o.region}</p></div>
-                      </div>
-                      <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">Active</span>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">{o.acheteur_nom.charAt(0)}</div>
+                      <div><p className="font-semibold text-gray-800">{o.acheteur_nom}</p><p className="text-xs text-gray-400">Acheteur — {o.region}</p></div>
+                      <span className="ml-auto text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">Active</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-center mb-3">
                       <div className="bg-green-50 rounded-lg p-2"><p className="text-xs text-gray-400">Produit</p><p className="font-semibold text-sm text-green-700">{o.produit}</p></div>
@@ -128,7 +121,7 @@ export default function Dashboard() {
                     </div>
                     {o.description && <p className="text-xs text-gray-500 mb-3 italic">"{o.description}"</p>}
                     <div className="flex gap-2">
-                      {o.acheteur_wa && <a href={`https://wa.me/${o.acheteur_wa}?text=Bonjour, j'ai vu votre offre pour ${o.produit} sur AgroMarché. Je suis intéressé !`} target="_blank" rel="noreferrer" className="flex-1 text-center text-xs bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition">💬 WhatsApp</a>}
+                      {o.acheteur_wa && <a href={`https://wa.me/${o.acheteur_wa}?text=Bonjour ${o.acheteur_nom}, j'ai vu votre offre pour ${o.produit} sur AgroMarché. Je suis intéressé !`} target="_blank" rel="noreferrer" className="flex-1 text-center text-xs bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition">💬 WhatsApp</a>}
                       {o.acheteur_tel && <a href={`tel:${o.acheteur_tel}`} className="flex-1 text-center text-xs bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg transition">📞 Appeler</a>}
                     </div>
                   </div>
@@ -150,7 +143,6 @@ export default function Dashboard() {
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700">{a.nom.charAt(0)}</div>
                       <div><p className="font-semibold text-gray-800">{a.nom}</p><p className="text-xs text-gray-400">{a.type} — {a.region}</p></div>
-                      {a.distance_km && <span className="ml-auto text-xs text-gray-400">📍 {a.distance_km} km</span>}
                     </div>
                     <div className="flex flex-wrap gap-1 mb-3">{a.produits.map((p,j)=><span key={j} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">{p}</span>)}</div>
                     <div className="flex gap-2">
@@ -217,7 +209,7 @@ export default function Dashboard() {
                       <YAxis tick={{fontSize:11}} domain={["auto","auto"]}/>
                       <Tooltip formatter={(v)=>`${v} FCFA`} labelFormatter={(l)=>`Jour ${l}`}/>
                       <ReferenceLine y={mlData.prix_actuel} stroke="#D97706" strokeDasharray="4 4"/>
-                      <Line type="monotone" dataKey="prix_predit" stroke="#1D6A3A" strokeWidth={2} dot={false} name="Prix prédit"/>
+                      <Line type="monotone" dataKey="prix_predit" stroke="#1D6A3A" strokeWidth={2} dot={false}/>
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -234,16 +226,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {onglet==="conseils" && (
-          <ConseilsIA region={region} />
-        )}
-              </div>
-            )}
-          </div>
-        )}
+        {onglet==="conseils" && <ConseilsIA region={region} />}
 
       </main>
     </div>
   );
 }
-// Patch applied
