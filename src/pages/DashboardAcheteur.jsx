@@ -14,32 +14,39 @@ export default function DashboardAcheteur() {
   const [mlProduit, setMlProduit] = useState("Tomates");
   const [mlData, setMlData]     = useState(null);
   const [mlLoading, setMlLoading] = useState(false);
-  const [newOffre, setNewOffre] = useState({ produit:"Tomates", quantite_kg:"", prix_propose:"", region:"dakar", description:"" });
-  const [saving, setSaving]     = useState(false);
+  const [newOffre, setNewOffre] = useState({
+    produit:"Tomates", quantite_kg:"", prix_propose:"",
+    region:"dakar", description:"",
+    acheteur_wa:"", acheteur_tel:""
+  });
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => { chargerPrix(); chargerMeteo(); chargerOffres(); }, [region]);
 
-  const chargerPrix    = async () => { try { const {data} = await api.get(`/prix/${region}`); setPrix(data); } catch { setPrix([]); }};
-  const chargerMeteo   = async () => { try { const {data} = await api.get(`/meteo/${region}`); setMeteo(data); } catch { setMeteo(null); }};
-  const chargerOffres  = async () => { try { const {data} = await api.get(`/offres/?region=${region}`); setOffres(data); } catch { setOffres([]); }};
+  const chargerPrix   = async () => { try { const {data} = await api.get(`/prix/${region}`); setPrix(data); } catch { setPrix([]); }};
+  const chargerMeteo  = async () => { try { const {data} = await api.get(`/meteo/${region}`); setMeteo(data); } catch { setMeteo(null); }};
+  const chargerOffres = async () => { try { const {data} = await api.get(`/offres/?region=${region}`); setOffres(data); } catch { setOffres([]); }};
 
   const publierOffre = async () => {
-    if (!newOffre.quantite_kg || !newOffre.prix_propose) return;
+    if (!newOffre.quantite_kg || !newOffre.prix_propose) {
+      alert("Veuillez remplir la quantité et le prix."); return;
+    }
+    if (!newOffre.acheteur_wa && !newOffre.acheteur_tel) {
+      alert("Veuillez entrer au moins un numéro de contact (WhatsApp ou téléphone)."); return;
+    }
     setSaving(true);
     try {
       await api.post("/offres/", {
         ...newOffre,
         acheteur_nom: user.nom,
-        acheteur_wa: user.telephone || "",
-        acheteur_tel: user.telephone || "",
         quantite_kg: parseFloat(newOffre.quantite_kg),
         prix_propose: parseFloat(newOffre.prix_propose),
       });
-      setNewOffre({ produit:"Tomates", quantite_kg:"", prix_propose:"", region:"dakar", description:"" });
+      setNewOffre({ produit:"Tomates", quantite_kg:"", prix_propose:"", region:"dakar", description:"", acheteur_wa:"", acheteur_tel:"" });
       chargerOffres();
-      alert("✅ Offre publiée ! Les agriculteurs peuvent la voir.");
+      alert("✅ Offre publiée ! Les agriculteurs peuvent vous contacter.");
     } catch { alert("Erreur lors de la publication."); }
     setSaving(false);
   };
@@ -125,7 +132,7 @@ export default function DashboardAcheteur() {
         {onglet==="offres" && (
           <div>
             <h2 className="font-semibold text-gray-700 mb-1">Publier une offre d'achat</h2>
-            <p className="text-xs text-gray-400 mb-4">Les agriculteurs verront votre offre et pourront vous contacter</p>
+            <p className="text-xs text-gray-400 mb-4">Les agriculteurs verront votre offre et vous contacteront</p>
 
             <div className="bg-white rounded-xl border p-4 mb-4">
               <div className="grid grid-cols-2 gap-3 mb-3">
@@ -144,6 +151,7 @@ export default function DashboardAcheteur() {
                   </select>
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="text-xs text-gray-500 mb-1 block">Quantité (kg)</label>
@@ -158,9 +166,30 @@ export default function DashboardAcheteur() {
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                 </div>
               </div>
-              <input placeholder="Description (optionnel)" value={newOffre.description}
+
+              {/* Contacts — obligatoires */}
+              <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                <p className="text-xs font-medium text-blue-700 mb-2">📞 Vos contacts (les agriculteurs vous appelleront)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">WhatsApp *</label>
+                    <input type="tel" placeholder="ex: 221771234567" value={newOffre.acheteur_wa}
+                      onChange={e=>setNewOffre({...newOffre, acheteur_wa:e.target.value})}
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"/>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Téléphone</label>
+                    <input type="tel" placeholder="ex: +221771234567" value={newOffre.acheteur_tel}
+                      onChange={e=>setNewOffre({...newOffre, acheteur_tel:e.target.value})}
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"/>
+                  </div>
+                </div>
+              </div>
+
+              <input placeholder="Description (optionnel) — ex: tomates fraîches, livraison possible" value={newOffre.description}
                 onChange={e=>setNewOffre({...newOffre, description:e.target.value})}
                 className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+
               <button onClick={publierOffre} disabled={saving}
                 className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg font-medium transition disabled:opacity-50">
                 {saving ? "Publication..." : "📢 Publier l'offre"}
@@ -176,14 +205,17 @@ export default function DashboardAcheteur() {
                   <div key={i} className="bg-white rounded-xl border p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold text-gray-800">{o.produit}</span>
-                      <button onClick={()=>fermerOffre(o.id)} className="text-xs text-red-500 hover:text-red-700">Fermer</button>
+                      <button onClick={()=>fermerOffre(o.id)} className="text-xs text-red-500 hover:text-red-700">Fermer ✕</button>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="grid grid-cols-3 gap-2 text-center mb-2">
                       <div className="bg-gray-50 rounded-lg p-2"><p className="text-xs text-gray-400">Quantité</p><p className="font-semibold text-sm">{o.quantite_kg} kg</p></div>
                       <div className="bg-gray-50 rounded-lg p-2"><p className="text-xs text-gray-400">Prix offert</p><p className="font-semibold text-sm">{o.prix_propose} FCFA</p></div>
                       <div className="bg-gray-50 rounded-lg p-2"><p className="text-xs text-gray-400">Région</p><p className="font-semibold text-sm">{o.region}</p></div>
                     </div>
-                    {o.description && <p className="text-xs text-gray-400 mt-2">{o.description}</p>}
+                    <div className="flex gap-2 text-xs text-gray-400">
+                      {o.acheteur_wa && <span>💬 {o.acheteur_wa}</span>}
+                      {o.acheteur_tel && <span>📞 {o.acheteur_tel}</span>}
+                    </div>
                   </div>
                 ))}
               </div>
