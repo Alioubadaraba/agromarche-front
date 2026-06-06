@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
+import ConseilsIA from './ConseilsIA';
+import ConseilsIA from './ConseilsIA';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 const REGIONS = ["dakar","thies","kaolack","ziguinchor","saint-louis"];
@@ -233,19 +235,8 @@ export default function Dashboard() {
         )}
 
         {onglet==="conseils" && (
-          <div>
-            <h2 className="font-semibold text-gray-700 mb-3">Conseils agricoles de saison</h2>
-            {conseils.length===0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border"><p className="text-4xl mb-3">💡</p><p className="text-gray-500">Aucun conseil disponible</p></div>
-            ) : (
-              <div className="space-y-3">
-                {conseils.map((c,i)=>(
-                  <div key={i} className="bg-white rounded-xl shadow-sm border p-4">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${BADGE[c.categorie]||"bg-gray-100 text-gray-600"}`}>{c.categorie}</span>
-                    <p className="font-semibold text-gray-800 mt-2 mb-1">{c.titre}</p>
-                    <p className="text-sm text-gray-500 leading-relaxed">{c.texte}</p>
-                  </div>
-                ))}
+          <ConseilsIA region={region} />
+        )}
               </div>
             )}
           </div>
@@ -255,3 +246,4 @@ export default function Dashboard() {
     </div>
   );
 }
+// Patch applied

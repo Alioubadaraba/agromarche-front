@@ -4,13 +4,25 @@ import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ nom: "", email: "", mot_de_passe: "", role: "agriculteur", region: "dakar" });
+  const [form, setForm] = useState({ nom:"", email:"", mot_de_passe:"", confirmer_mdp:"", role:"agriculteur", region:"dakar" });
   const [erreur, setErreur] = useState("");
   const navigate = useNavigate();
 
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   const submit = async () => {
+    setErreur("");
+    if (mode === "register") {
+      if (!form.nom || !form.email || !form.mot_de_passe) {
+        setErreur("Veuillez remplir tous les champs."); return;
+      }
+      if (form.mot_de_passe !== form.confirmer_mdp) {
+        setErreur("Les mots de passe ne correspondent pas."); return;
+      }
+      if (form.mot_de_passe.length < 6) {
+        setErreur("Le mot de passe doit contenir au moins 6 caractères."); return;
+      }
+    }
     try {
       const url = mode === "login" ? "/auth/login" : "/auth/register";
       const { data } = await api.post(url, form);
@@ -18,7 +30,7 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(data.utilisateur));
       navigate("/dashboard");
     } catch {
-      setErreur("Email ou mot de passe incorrect");
+      setErreur(mode === "login" ? "Email ou mot de passe incorrect." : "Erreur lors de l'inscription. Email déjà utilisé ?");
     }
   };
 
@@ -27,31 +39,44 @@ export default function Login() {
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <div className="text-5xl mb-2">🌱</div>
-          <h1 className="text-2xl font-bold text-vert-500">AgroMarché</h1>
+          <h1 className="text-2xl font-bold text-green-700">AgroMarché</h1>
           <p className="text-gray-500 text-sm">Connectez agriculteurs et marchés</p>
         </div>
 
         <div className="flex rounded-lg overflow-hidden border border-gray-200 mb-6">
-          <button onClick={() => setMode("login")} className={`flex-1 py-2 text-sm font-medium transition ${mode==="login" ? "bg-vert-500 text-white" : "text-gray-500"}`}>Connexion</button>
-          <button onClick={() => setMode("register")} className={`flex-1 py-2 text-sm font-medium transition ${mode==="register" ? "bg-vert-500 text-white" : "text-gray-500"}`}>Inscription</button>
+          <button onClick={() => setMode("login")} className={`flex-1 py-2 text-sm font-medium transition ${mode==="login" ? "bg-green-700 text-white" : "text-gray-500"}`}>Connexion</button>
+          <button onClick={() => setMode("register")} className={`flex-1 py-2 text-sm font-medium transition ${mode==="register" ? "bg-green-700 text-white" : "text-gray-500"}`}>Inscription</button>
         </div>
 
         {mode === "register" && (
-          <input name="nom" placeholder="Nom complet" onChange={handle}
-            className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-vert-500" />
+          <input name="nom" placeholder="Nom complet *" onChange={handle}
+            className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
         )}
-        <input name="email" type="email" placeholder="Email" onChange={handle}
-          className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-vert-500" />
-        <input name="mot_de_passe" type="password" placeholder="Mot de passe" onChange={handle}
-          className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-vert-500" />
+
+        <input name="email" type="email" placeholder="Email *" onChange={handle}
+          className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+
+        <input name="mot_de_passe" type="password" placeholder="Mot de passe *" onChange={handle}
+          className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
 
         {mode === "register" && (
           <>
-            <select name="role" onChange={handle} className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-vert-500">
-              <option value="agriculteur">Agriculteur</option>
-              <option value="acheteur">Acheteur</option>
+            <input name="confirmer_mdp" type="password" placeholder="Confirmer le mot de passe *" onChange={handle}
+              className={`w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${form.confirmer_mdp && form.mot_de_passe !== form.confirmer_mdp ? "border-red-400 bg-red-50" : form.confirmer_mdp && form.mot_de_passe === form.confirmer_mdp ? "border-green-400 bg-green-50" : ""}`} />
+
+            {form.confirmer_mdp && form.mot_de_passe !== form.confirmer_mdp && (
+              <p className="text-red-500 text-xs mb-2">❌ Les mots de passe ne correspondent pas</p>
+            )}
+            {form.confirmer_mdp && form.mot_de_passe === form.confirmer_mdp && (
+              <p className="text-green-600 text-xs mb-2">✅ Mots de passe identiques</p>
+            )}
+
+            <select name="role" onChange={handle} className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+              <option value="agriculteur">🌱 Agriculteur</option>
+              <option value="acheteur">🤝 Acheteur</option>
             </select>
-            <select name="region" onChange={handle} className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-vert-500">
+
+            <select name="region" onChange={handle} className="w-full border rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
               <option value="dakar">Dakar</option>
               <option value="thies">Thiès</option>
               <option value="kaolack">Kaolack</option>
@@ -61,9 +86,9 @@ export default function Login() {
           </>
         )}
 
-        {erreur && <p className="text-red-500 text-sm mb-3">{erreur}</p>}
+        {erreur && <p className="text-red-500 text-sm mb-3 bg-red-50 p-2 rounded-lg">⚠️ {erreur}</p>}
 
-        <button onClick={submit} className="w-full bg-vert-500 hover:bg-vert-600 text-white font-semibold py-3 rounded-lg transition">
+        <button onClick={submit} className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-3 rounded-lg transition">
           {mode === "login" ? "Se connecter" : "Créer mon compte"}
         </button>
       </div>
