@@ -226,7 +226,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {onglet==="conseils" && <ConseilsIA region={region} />}
+        
 
       </main>
     </div>
