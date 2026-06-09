@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import ConseilsIA from "./ConseilsIA";
 
 const REGIONS = ["dakar","thies","kaolack","ziguinchor","saint-louis"];
 const PRODUITS = ["Tomates","Oignons","Mil","Maïs","Arachides","Riz local","Mangues","Niébé","Manioc","Aubergines","Choux","Pastèques"];
@@ -65,7 +64,7 @@ export default function Dashboard() {
       )}
 
       <nav className="bg-white border-b flex overflow-x-auto">
-        {[["prix","💰 Prix"],["offres","📢 Offres"],["acheteurs","🤝 Acheteurs"],["meteo","🌦 Météo"],["ml","🤖 IA Prix"],["conseils","💡 Conseils IA"]].map(([id,label])=>(
+        {[["prix","💰 Prix"],["offres","📢 Offres"],["acheteurs","🤝 Acheteurs"],["meteo","🌦 Météo"],["ml","🤖 IA Prix"],].map(([id,label])=>(
           <button key={id} onClick={()=>setOnglet(id)}
             className={`flex-shrink-0 px-3 py-3 text-sm font-medium border-b-2 transition ${onglet===id?"border-green-600 text-green-600":"border-transparent text-gray-500 hover:text-gray-700"}`}>
             {label}
